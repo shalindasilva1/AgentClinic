@@ -7,178 +7,7 @@ llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
 mixtral_url = "mistralai/mixtral-8x7b-instruct-v0.1"
 
-def load_huggingface_model(model_name):
-    pipe = pipeline("text-generation", model=model_name, device_map="auto")
-    return pipe
-
-def inference_huggingface(prompt, pipe):
-    response = pipe(prompt, max_new_tokens=100)[0]["generated_text"]
-    response = response.replace(prompt, "")
-    return response
-
-
-def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_requested=False, scene=None, max_prompt_len=2**14, clip_prompt=False):
-    if model_str not in ["gpt4", "gpt3.5", "gpt4o", 'llama-2-70b-chat', "mixtral-8x7b", "gpt-4o-mini", "llama-3-70b-instruct", "gpt4v", "claude3.5sonnet", "o1-preview"] and "_HF" not in model_str:
-        raise Exception("No model by the name {}".format(model_str))
-    for _ in range(tries):
-        if clip_prompt: prompt = prompt[:max_prompt_len]
-        try:
-            if image_requested:
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", 
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url",
-                            "image_url": {
-                                "url": "{}".format(scene.image_url),
-                            },
-                        },
-                    ]},]
-                if model_str == "gpt4v":
-                    response = openai.ChatCompletion.create(
-                            model="gpt-4-vision-preview",
-                            messages=messages,
-                            temperature=0.05,
-                            max_tokens=200,
-                        )
-                elif model_str == "gpt-4o-mini":
-                    response = openai.ChatCompletion.create(
-                            model="gpt-4o-mini",
-                            messages=messages,
-                            temperature=0.05,
-                            max_tokens=200,
-                        )
-                elif model_str == "gpt4":
-                    response = openai.ChatCompletion.create(
-                            model="gpt-4-turbo",
-                            messages=messages,
-                            temperature=0.05,
-                            max_tokens=200,
-                        )
-                elif model_str == "gpt4o":
-                    response = openai.ChatCompletion.create(
-                            model="gpt-4o",
-                            messages=messages,
-                            temperature=0.05,
-                            max_tokens=200,
-                        )
-                answer = response["choices"][0]["message"]["content"]
-            if model_str == "gpt4":
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}]
-                response = openai.ChatCompletion.create(
-                        model="gpt-4-turbo-preview",
-                        messages=messages,
-                        temperature=0.05,
-                        max_tokens=200,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == "gpt4v":
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}]
-                response = openai.ChatCompletion.create(
-                        model="gpt-4-vision-preview",
-                        messages=messages,
-                        temperature=0.05,
-                        max_tokens=200,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == "gpt-4o-mini":
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}]
-                response = openai.ChatCompletion.create(
-                        model="gpt-4o-mini",
-                        messages=messages,
-                        temperature=0.05,
-                        max_tokens=200,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == "o1-preview":
-                messages = [
-                    {"role": "user", "content": system_prompt + prompt}]
-                response = openai.ChatCompletion.create(
-                        model="o1-preview-2024-09-12",
-                        messages=messages,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == "gpt3.5":
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}]
-                response = openai.ChatCompletion.create(
-                        model="gpt-3.5-turbo",
-                        messages=messages,
-                        temperature=0.05,
-                        max_tokens=200,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == "claude3.5sonnet":
-                client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-                message = client.messages.create(
-                    model="claude-3-5-sonnet-20240620",
-                    system=system_prompt,
-                    max_tokens=256,
-                    messages=[{"role": "user", "content": prompt}])
-                answer = json.loads(message.to_json())["content"][0]["text"]
-            elif model_str == "gpt4o":
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}]
-                response = openai.ChatCompletion.create(
-                        model="gpt-4o",
-                        messages=messages,
-                        temperature=0.05,
-                        max_tokens=200,
-                    )
-                answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == 'llama-2-70b-chat':
-                output = replicate.run(
-                    llama2_url, input={
-                        "prompt":  prompt, 
-                        "system_prompt": system_prompt,
-                        "max_new_tokens": 200})
-                answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == 'mixtral-8x7b':
-                output = replicate.run(
-                    mixtral_url, 
-                    input={"prompt": prompt, 
-                            "system_prompt": system_prompt,
-                            "max_new_tokens": 75})
-                answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
-            elif model_str == 'llama-3-70b-instruct':
-                output = replicate.run(
-                    llama3_url, input={
-                        "prompt":  prompt, 
-                        "system_prompt": system_prompt,
-                        "max_new_tokens": 200})
-                answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
-            elif "HF_" in model_str:
-                input_text = system_prompt + prompt 
-                #if self.pipe is None:
-                #    self.pipe = load_huggingface_model(self.backend.replace("HF_", ""))
-                raise Exception("Sorry, fixing TODO :3") #inference_huggingface(input_text, self.pipe)
-            return answer
-        
-        except Exception as e:
-            time.sleep(timeout)
-            continue
-    raise Exception("Max retries: timeout")
-
-
-
+### Scenario handling ###
 class ScenarioMedQA:
     def __init__(self, scenario_dict) -> None:
         self.scenario_dict = scenario_dict
@@ -202,7 +31,6 @@ class ScenarioMedQA:
     def diagnosis_information(self) -> dict:
         return self.diagnosis
 
-
 class ScenarioLoaderMedQA:
     def __init__(self) -> None:
         with open("agentclinic_medqa.jsonl", "r") as f:
@@ -216,8 +44,6 @@ class ScenarioLoaderMedQA:
     def get_scenario(self, id):
         if id is None: return self.sample_scenario()
         return self.scenarios[id]
-        
-
 
 class ScenarioMedQAExtended:
     def __init__(self, scenario_dict) -> None:
@@ -242,7 +68,6 @@ class ScenarioMedQAExtended:
     def diagnosis_information(self) -> dict:
         return self.diagnosis
 
-
 class ScenarioLoaderMedQAExtended:
     def __init__(self) -> None:
         with open("agentclinic_medqa_extended.jsonl", "r") as f:
@@ -256,8 +81,6 @@ class ScenarioLoaderMedQAExtended:
     def get_scenario(self, id):
         if id is None: return self.sample_scenario()
         return self.scenarios[id]
-        
-
 
 class ScenarioMIMICIVQA:
     def __init__(self, scenario_dict) -> None:
@@ -282,7 +105,6 @@ class ScenarioMIMICIVQA:
     def diagnosis_information(self) -> dict:
         return self.diagnosis
 
-
 class ScenarioLoaderMIMICIV:
     def __init__(self) -> None:
         with open("agentclinic_mimiciv.jsonl", "r") as f:
@@ -296,7 +118,6 @@ class ScenarioLoaderMIMICIV:
     def get_scenario(self, id):
         if id is None: return self.sample_scenario()
         return self.scenarios[id]
-
 
 class ScenarioNEJMExtended:
     def __init__(self, scenario_dict) -> None:
@@ -322,7 +143,6 @@ class ScenarioNEJMExtended:
     def diagnosis_information(self) -> str:
         return self.diagnosis
 
-
 class ScenarioLoaderNEJMExtended:
     def __init__(self) -> None:
         with open("agentclinic_nejm_extended.jsonl", "r") as f:
@@ -336,7 +156,6 @@ class ScenarioLoaderNEJMExtended:
     def get_scenario(self, id):
         if id is None: return self.sample_scenario()
         return self.scenarios[id]
-
 
 class ScenarioNEJM:
     def __init__(self, scenario_dict) -> None:
@@ -362,7 +181,6 @@ class ScenarioNEJM:
     def diagnosis_information(self) -> str:
         return self.diagnosis
 
-
 class ScenarioLoaderNEJM:
     def __init__(self) -> None:
         with open("agentclinic_nejm.jsonl", "r") as f:
@@ -377,9 +195,9 @@ class ScenarioLoaderNEJM:
         if id is None: return self.sample_scenario()
         return self.scenarios[id]
 
-
+### Agents ###
 class PatientAgent:
-    def __init__(self, scenario, backend_str="gpt4", bias_present=None) -> None:
+    def __init__(self, scenario, backend_str="gpt4", bias_present=None, big5_enabled=False) -> None:
         # disease of patient, or "correct answer"
         self.disease = ""
         # symptoms that patient presents
@@ -392,6 +210,7 @@ class PatientAgent:
         self.bias_present = (None if bias_present == "None" else bias_present)
         # sample initial question from dataset
         self.scenario = scenario
+        self.big5_enabled = big5_enabled
         self.reset()
         self.pipe = None
 
@@ -438,9 +257,12 @@ class PatientAgent:
 
     def system_prompt(self) -> str:
         bias_prompt = ""
+        base = """You are a patient in a clinic who only responds in the form of dialogue. You are being inspected by a doctor who will ask you questions and will perform exams on you in order to understand your disease. Your answer will only be 1-3 sentences in length."""
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
-        base = """You are a patient in a clinic who only responds in the form of dialogue. You are being inspected by a doctor who will ask you questions and will perform exams on you in order to understand your disease. Your answer will only be 1-3 sentences in length."""
+        if self.big5_enabled:
+            patient_big5 = parse_big5(args.patient_personality)
+            persona_card("Patient", patient_big5)
         symptoms = "\n\nBelow is all of your information. {}. \n\n Remember, you must not reveal your disease explicitly but may only convey the symptoms you have in the form of dialogue if you are asked.".format(self.symptoms)
         return base + bias_prompt + symptoms
     
@@ -451,9 +273,8 @@ class PatientAgent:
     def add_hist(self, hist_str) -> None:
         self.agent_hist += hist_str + "\n\n"
 
-
 class DoctorAgent:
-    def __init__(self, scenario, backend_str="gpt4", max_infs=20, bias_present=None, img_request=False) -> None:
+    def __init__(self, scenario, backend_str="gpt4", max_infs=20, bias_present=None, img_request=False, big5_enabled=False) -> None:
         # number of inference calls to the doctor
         self.infs = 0
         # maximum number of inference calls to the doctor
@@ -468,6 +289,7 @@ class DoctorAgent:
         self.bias_present = (None if bias_present == "None" else bias_present)
         # prepare initial conditions for LLM
         self.scenario = scenario
+        self.big5_enabled = big5_enabled
         self.reset()
         self.pipe = None
         self.img_request = img_request
@@ -519,9 +341,12 @@ class DoctorAgent:
 
     def system_prompt(self) -> str:
         bias_prompt = ""
+        base = "You are a doctor named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
-        base = "You are a doctor named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
+        if self.big5_enabled:
+            doctor_big5 = parse_big5(args.doctor_personality)
+            base = base + persona_card("Doctor", doctor_big5)
         presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
         return base + bias_prompt + presentation
 
@@ -529,9 +354,8 @@ class DoctorAgent:
         self.agent_hist = ""
         self.presentation = self.scenario.examiner_information()
 
-
 class MeasurementAgent:
-    def __init__(self, scenario, backend_str="gpt4") -> None:
+    def __init__(self, scenario, backend_str="gpt4", big5_enabled=False) -> None:
         # conversation history between doctor and patient
         self.agent_hist = ""
         # presentation information for measurement 
@@ -540,6 +364,7 @@ class MeasurementAgent:
         self.backend = backend_str
         # prepare initial conditions for LLM
         self.scenario = scenario
+        self.big5_enabled = big5_enabled
         self.pipe = None
         self.reset()
 
@@ -551,6 +376,9 @@ class MeasurementAgent:
 
     def system_prompt(self) -> str:
         base = "You are an measurement reader who responds with medical test results. Please respond in the format \"RESULTS: [results here]\""
+        if self.big5_enabled:
+            measurement_big5 = parse_big5(args.doctor_personality)
+            base = base + persona_card("Measurement", measurement_big5)
         presentation = "\n\nBelow is all of the information you have. {}. \n\n If the requested results are not in your data then you can respond with NORMAL READINGS.".format(self.information)
         return base + presentation
     
@@ -561,11 +389,201 @@ class MeasurementAgent:
         self.agent_hist = ""
         self.information = self.scenario.exam_information()
 
+### Methods ###
+def parse_big5(s: str):
+    vals = [float(x.strip()) for x in s.split(',')]
+    assert len(vals) == 5, "Use 5 floats for O,C,E,A,N"
+    keys = ['O','C','E','A','N']
+    return {k: v for k, v in zip(keys, vals)}
+
+def persona_card(role_name: str, big5: dict):
+    # keep it short; long persona dumps hurt token budget
+    return (
+        f"As you are the {role_name}.\n"
+        f"Your personality (Big Five 0–1): "
+        f"O:{big5['O']:.2f} C:{big5['C']:.2f} E:{big5['E']:.2f} A:{big5['A']:.2f} N:{big5['N']:.2f}.\n"
+        "Behavior rules:\n"
+        "- Higher C: cite guidelines and be methodical.\n"
+        "- Higher O: consider broader differentials and creative tests.\n"
+        "- Higher A: collaborate, explain clearly, avoid confrontation.\n"
+        "- Higher E: keep concise but proactive; escalate sooner.\n"
+        "- Higher N: double-check uncertain conclusions and propose safety nets.\n"
+    )
 
 def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the doctor dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the doctor diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
     return answer.lower()
 
+def load_huggingface_model(model_name):
+    pipe = pipeline("text-generation", model=model_name, device_map="auto")
+    return pipe
+
+def inference_huggingface(prompt, pipe):
+    response = pipe(prompt, max_new_tokens=100)[0]["generated_text"]
+    response = response.replace(prompt, "")
+    return response
+
+def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_requested=False, scene=None,
+                max_prompt_len=2 ** 14, clip_prompt=False):
+    if model_str not in ["gpt4", "gpt3.5", "gpt4o", 'llama-2-70b-chat', "mixtral-8x7b", "gpt-4o-mini",
+                         "llama-3-70b-instruct", "gpt4v", "claude3.5sonnet", "o1-preview"] and "_HF" not in model_str:
+        raise Exception("No model by the name {}".format(model_str))
+    for _ in range(tries):
+        if clip_prompt: prompt = prompt[:max_prompt_len]
+        try:
+            if image_requested:
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",
+                     "content": [
+                         {"type": "text", "text": prompt},
+                         {"type": "image_url",
+                          "image_url": {
+                              "url": "{}".format(scene.image_url),
+                          },
+                          },
+                     ]}, ]
+                if model_str == "gpt4v":
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4-vision-preview",
+                        messages=messages,
+                        temperature=0.05,
+                        max_tokens=200,
+                    )
+                elif model_str == "gpt-4o-mini":
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=messages,
+                        temperature=0.05,
+                        max_tokens=200,
+                    )
+                elif model_str == "gpt4":
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4-turbo",
+                        messages=messages,
+                        temperature=0.05,
+                        max_tokens=200,
+                    )
+                elif model_str == "gpt4o":
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4o",
+                        messages=messages,
+                        temperature=0.05,
+                        max_tokens=200,
+                    )
+                answer = response["choices"][0]["message"]["content"]
+            if model_str == "gpt4":
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}]
+                response = openai.ChatCompletion.create(
+                    model="gpt-4-turbo-preview",
+                    messages=messages,
+                    temperature=0.05,
+                    max_tokens=200,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == "gpt4v":
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}]
+                response = openai.ChatCompletion.create(
+                    model="gpt-4-vision-preview",
+                    messages=messages,
+                    temperature=0.05,
+                    max_tokens=200,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == "gpt-4o-mini":
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}]
+                response = openai.ChatCompletion.create(
+                    model="gpt-4o-mini",
+                    messages=messages,
+                    temperature=0.05,
+                    max_tokens=200,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == "o1-preview":
+                messages = [
+                    {"role": "user", "content": system_prompt + prompt}]
+                response = openai.ChatCompletion.create(
+                    model="o1-preview-2024-09-12",
+                    messages=messages,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == "gpt3.5":
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}]
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages,
+                    temperature=0.05,
+                    max_tokens=200,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == "claude3.5sonnet":
+                client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+                message = client.messages.create(
+                    model="claude-3-5-sonnet-20240620",
+                    system=system_prompt,
+                    max_tokens=256,
+                    messages=[{"role": "user", "content": prompt}])
+                answer = json.loads(message.to_json())["content"][0]["text"]
+            elif model_str == "gpt4o":
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}]
+                response = openai.ChatCompletion.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    temperature=0.05,
+                    max_tokens=200,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == 'llama-2-70b-chat':
+                output = replicate.run(
+                    llama2_url, input={
+                        "prompt": prompt,
+                        "system_prompt": system_prompt,
+                        "max_new_tokens": 200})
+                answer = ''.join(output)
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == 'mixtral-8x7b':
+                output = replicate.run(
+                    mixtral_url,
+                    input={"prompt": prompt,
+                           "system_prompt": system_prompt,
+                           "max_new_tokens": 75})
+                answer = ''.join(output)
+                answer = re.sub("\s+", " ", answer)
+            elif model_str == 'llama-3-70b-instruct':
+                output = replicate.run(
+                    llama3_url, input={
+                        "prompt": prompt,
+                        "system_prompt": system_prompt,
+                        "max_new_tokens": 200})
+                answer = ''.join(output)
+                answer = re.sub("\s+", " ", answer)
+            elif "HF_" in model_str:
+                input_text = system_prompt + prompt
+                # if self.pipe is None:
+                #    self.pipe = load_huggingface_model(self.backend.replace("HF_", ""))
+                raise Exception("Sorry, fixing TODO :3")  # inference_huggingface(input_text, self.pipe)
+            return answer
+
+        except Exception as e:
+            time.sleep(timeout)
+            continue
+    raise Exception("Max retries: timeout")
 
 def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor_llm, patient_llm, measurement_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
     openai.api_key = api_key
@@ -658,7 +676,6 @@ def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor
             # Prevent API timeouts
             time.sleep(1.0)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Medical Diagnosis Simulation CLI')
     parser.add_argument('--openai_api_key', type=str, required=False, help='OpenAI API Key')
@@ -675,7 +692,12 @@ if __name__ == "__main__":
     parser.add_argument('--num_scenarios', type=int, default=None, required=False, help='Number of scenarios to simulate')
     parser.add_argument('--total_inferences', type=int, default=20, required=False, help='Number of inferences between patient and doctor')
     parser.add_argument('--anthropic_api_key', type=str, default=None, required=False, help='Anthropic API key for Claude 3.5 Sonnet')
-    
+
+    # BIG-5 args
+    parser.add_argument('--doctor_personality', type=str, default='0.7,0.9,0.3,0.8,0.2', help='Big5 for doctor as comma-separated floats')
+    parser.add_argument('--patient_personality', type=str, default='0.6,0.4,0.5,0.7,0.4')
+    parser.add_argument('--moderator_personality', type=str, default='0.6,0.8,0.4,0.8,0.2')
+    parser.add_argument('--measurement_personality', type=str, default='0.5,0.9,0.2,0.6,0.3')
     args = parser.parse_args()
 
     main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.anthropic_api_key)
