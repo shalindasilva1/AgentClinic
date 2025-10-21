@@ -400,7 +400,7 @@ def persona_card(role_name: str, big5: dict):
     # keep it short; long persona dumps hurt token budget
     return (
         f"As you are the {role_name}.\n"
-        f"Your personality (Big Five 0–1): "
+        f"Your personality (Big Five 0–100): "
         f"O:{big5['O']:.2f} C:{big5['C']:.2f} E:{big5['E']:.2f} A:{big5['A']:.2f} N:{big5['N']:.2f}.\n"
         "Behavior rules:\n"
         "- Higher C: cite guidelines and be methodical.\n"
@@ -409,6 +409,54 @@ def persona_card(role_name: str, big5: dict):
         "- Higher E: keep concise but proactive; escalate sooner.\n"
         "- Higher N: double-check uncertain conclusions and propose safety nets.\n"
     )
+
+
+#version 2, that should work together with the JSON Files, that have the personality.
+import json
+
+def persona_card_from_json(json_path: str):
+    # Load JSON file
+    with open(json_path, 'r') as f:
+        data = json.load(f)['personality_profile']
+
+    name = data['name']
+    desc = data['description']
+    traits = data['big_five_traits']
+    comms = data.get('communication', {})
+
+    # Extract short trait info
+    big5_scores = {
+        'O': traits['openness']['score'],
+        'C': traits['conscientiousness']['score'],
+        'E': traits['extraversion']['score'],
+        'A': traits['agreeableness']['score'],
+        'N': traits['neuroticism']['score']
+    }
+
+    # Build persona summary string
+    card = (
+        f"As you are the {name}.\n"
+        f"{desc}\n\n"
+        f"Your personality (Big Five 0–100): "
+        f"O:{big5_scores['O']:.2f} C:{big5_scores['C']:.2f} "
+        f"E:{big5_scores['E']:.2f} A:{big5_scores['A']:.2f} N:{big5_scores['N']:.2f}.\n\n"
+        "Behavior rules:\n"
+        f"- Higher O: {traits['openness']['impact']}\n"
+        f"- Higher C: {traits['conscientiousness']['impact']}\n"
+        f"- Higher E: {traits['extraversion']['impact']}\n"
+        f"- Higher A: {traits['agreeableness']['impact']}\n"
+        f"- Lower N: {traits['neuroticism']['impact']}\n\n"
+    )
+
+    if comms:
+        card += (
+            "Communication style:\n"
+            f"- Tone: {comms.get('tone', 'n/a')}\n"
+            f"- Vocabulary: {comms.get('vocabulary', 'n/a')}\n"
+            f"- Style: {comms.get('style', 'n/a')}\n"
+        )
+
+    return card
 
 def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the doctor dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the doctor diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
