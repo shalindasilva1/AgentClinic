@@ -262,7 +262,7 @@ class PatientAgent:
             bias_prompt = self.generate_bias()
         if self.big5_enabled:
             patient_big5 = parse_big5(args.patient_personality)
-            persona_card("Patient", patient_big5)
+            base = base + persona_card("Patient", patient_big5)
         symptoms = "\n\nBelow is all of your information. {}. \n\n Remember, you must not reveal your disease explicitly but may only convey the symptoms you have in the form of dialogue if you are asked.".format(self.symptoms)
         return base + bias_prompt + symptoms
     
