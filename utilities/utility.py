@@ -16,7 +16,7 @@ def persona_card(role_name: str, big5: dict):
     # keep it short; long persona dumps hurt token budget
     return (
         f"As you are the {role_name}.\n"
-        f"Your personality (Big Five 0–1): "
+        f"Your personality (Big Five 0–100): "
         f"O:{big5['O']:.2f} C:{big5['C']:.2f} E:{big5['E']:.2f} A:{big5['A']:.2f} N:{big5['N']:.2f}.\n"
         "Behavior rules:\n"
         "- Higher C: cite guidelines and be methodical.\n"

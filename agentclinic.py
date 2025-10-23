@@ -7,7 +7,23 @@ from agents.PatientAgent import PatientAgent
 from utilities.utility import load_huggingface_model, compare_results
 from utilities.scenario import *
 
-def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor_llm, patient_llm, measurement_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
+def main(api_key,
+         replicate_api_key,
+         inf_type,
+         doctor_bias,
+         patient_bias,
+         doctor_llm,
+         patient_llm,
+         measurement_llm,
+         moderator_llm,
+         num_scenarios,
+         dataset,
+         img_request,
+         total_inferences,
+         enable_big5,
+         anthropic_api_key=None,):
+
+    # Reading secret keys
     openai.api_key = api_key
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
@@ -32,6 +48,16 @@ def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor
     total_correct = 0
     total_presents = 0
 
+    doctor_personality = patient_personality = measurement_personality = moderator_personality = ''
+    # Big 5 config
+    if enable_big5:
+        with open('IPIP-BIG5/personalities_config.json', 'r') as f:
+            personalities = json.load(f)
+            doctor_personality = f"{personalities['doctor']['openness']},{personalities['doctor']['conscientiousness']},{personalities['doctor']['extraversion']},{personalities['doctor']['agreeableness']},{personalities['doctor']['neuroticism']}"
+            patient_personality = f"{personalities['patient']['openness']},{personalities['patient']['conscientiousness']},{personalities['patient']['extraversion']},{personalities['patient']['agreeableness']},{personalities['patient']['neuroticism']}"
+            measurement_personality = f"{personalities['measurement']['openness']},{personalities['measurement']['conscientiousness']},{personalities['measurement']['extraversion']},{personalities['measurement']['agreeableness']},{personalities['measurement']['neuroticism']}"
+            moderator_personality = f"{personalities['moderator']['openness']},{personalities['moderator']['conscientiousness']},{personalities['moderator']['extraversion']},{personalities['moderator']['agreeableness']},{personalities['moderator']['neuroticism']}"
+
     # Pipeline for huggingface models
     if "HF_" in moderator_llm:
         pipe = load_huggingface_model(moderator_llm.replace("HF_", ""))
@@ -46,17 +72,23 @@ def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor
         # Initialize agents
         meas_agent = MeasurementAgent(
             scenario=scenario,
-            backend_str=measurement_llm)
+            backend_str=measurement_llm,
+            big5_enabled=enable_big5,
+            personality=measurement_personality,)
         patient_agent = PatientAgent(
             scenario=scenario, 
             bias_present=patient_bias,
-            backend_str=patient_llm)
+            backend_str=patient_llm,
+            big5_enabled=enable_big5,
+            personality=patient_personality)
         doctor_agent = DoctorAgent(
             scenario=scenario, 
             bias_present=doctor_bias,
             backend_str=doctor_llm,
             max_infs=total_inferences, 
-            img_request=img_request)
+            img_request=img_request,
+            big5_enabled=enable_big5,
+            personality=doctor_personality)
 
         doctor_dialogue = ""
         for _inf_id in range(total_inferences):
@@ -117,10 +149,6 @@ if __name__ == "__main__":
 
     # BIG-5 args
     parser.add_argument('--enable_big5', type=bool, default=False, required=False, help='Enable Big5 diagnosis')
-    parser.add_argument('--doctor_personality', type=str, default='0.7,0.9,0.3,0.8,0.2', help='Big5 for doctor as comma-separated floats')
-    parser.add_argument('--patient_personality', type=str, default='0.6,0.4,0.5,0.7,0.4')
-    parser.add_argument('--moderator_personality', type=str, default='0.6,0.8,0.4,0.8,0.2')
-    parser.add_argument('--measurement_personality', type=str, default='0.5,0.9,0.2,0.6,0.3')
     args = parser.parse_args()
 
-    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.anthropic_api_key)
+    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.enable_big5, args.anthropic_api_key)

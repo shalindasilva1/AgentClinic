@@ -1,0 +1,30 @@
+{
+  "doctor": {
+    "openness": 70,
+    "conscientiousness": 90,
+    "extraversion": 30,
+    "agreeableness": 80,
+    "neuroticism": 20
+  },
+  "patient": {
+    "openness": 60,
+    "conscientiousness": 40,
+    "extraversion": 50,
+    "agreeableness": 70,
+    "neuroticism": 40
+  },
+  "moderator": {
+    "openness": 60,
+    "conscientiousness": 80,
+    "extraversion": 40,
+    "agreeableness": 80,
+    "neuroticism": 20
+  },
+  "measurement": {
+    "openness": 50,
+    "conscientiousness": 90,
+    "extraversion": 20,
+    "agreeableness": 60,
+    "neuroticism": 30
+  }
+}
