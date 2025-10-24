@@ -1,4 +1,6 @@
 import argparse
+from bdb import Breakpoint
+
 import openai, time, os
 
 from agents.DoctorAgent import DoctorAgent
@@ -21,6 +23,7 @@ def main(api_key,
          img_request,
          total_inferences,
          enable_big5,
+         evaluate_doctor = False,
          anthropic_api_key=None,):
 
     # Reading secret keys
@@ -64,11 +67,14 @@ def main(api_key,
     else:
         pipe = None
     if num_scenarios is None: num_scenarios = scenario_loader.num_scenarios
+
     for _scenario_id in range(0, min(num_scenarios, scenario_loader.num_scenarios)):
         total_presents += 1
         pi_dialogue = str()
+
         # Initialize scenarios (MedQA/NEJM)
         scenario =  scenario_loader.get_scenario(id=_scenario_id)
+
         # Initialize agents
         meas_agent = MeasurementAgent(
             scenario=scenario,
@@ -91,6 +97,9 @@ def main(api_key,
             personality=doctor_personality)
 
         doctor_dialogue = ""
+        if evaluate_doctor:
+            print(doctor_agent.take_test(question_set=120, sex="N", age=55))
+            break
         for _inf_id in range(total_inferences):
             # Check for medical image request
             if dataset == "NEJM":
@@ -98,15 +107,18 @@ def main(api_key,
                     imgs = "REQUEST IMAGES" in doctor_dialogue
                 else: imgs = True
             else: imgs = False
+
             # Check if final inference
             if _inf_id == total_inferences - 1:
                 pi_dialogue += "This is the final question. Please provide a diagnosis.\n"
+
             # Obtain doctor dialogue (human or llm agent)
             if inf_type == "human_doctor":
                 doctor_dialogue = input("\nQuestion for patient: ")
             else: 
                 doctor_dialogue = doctor_agent.inference_doctor(pi_dialogue, image_requested=imgs)
             print("Doctor [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), doctor_dialogue)
+
             # Doctor has arrived at a diagnosis, check correctness
             if "DIAGNOSIS READY" in doctor_dialogue:
                 correctness = compare_results(doctor_dialogue, scenario.diagnosis_information(), moderator_llm, pipe) == "yes"
@@ -149,6 +161,7 @@ if __name__ == "__main__":
 
     # BIG-5 args
     parser.add_argument('--enable_big5', type=bool, default=False, required=False, help='Enable Big5 diagnosis')
+    parser.add_argument('--evaluate_doctor', type=bool, default=False, required=False, help='Evaluate doctors personality by taking five-factor-e test')
     args = parser.parse_args()
 
-    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.enable_big5, args.anthropic_api_key)
+    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.enable_big5, args.evaluate_doctor, args.anthropic_api_key)
