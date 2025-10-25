@@ -26,6 +26,50 @@ def persona_card(role_name: str, big5: dict):
         "- Higher N: double-check uncertain conclusions and propose safety nets.\n"
     )
 
+def persona_card_from_json(json_path: str):
+    # Load JSON file
+    with open(json_path, 'r') as f:
+        data = json.load(f)['personality_profile']
+
+    name = data['name']
+    desc = data['description']
+    traits = data['big_five_traits']
+    comms = data.get('communication', {})
+
+    # Extract short trait info
+    big5_scores = {
+        'O': traits['openness']['score'],
+        'C': traits['conscientiousness']['score'],
+        'E': traits['extraversion']['score'],
+        'A': traits['agreeableness']['score'],
+        'N': traits['neuroticism']['score']
+    }
+
+    # Build persona summary string
+    card = (
+        f"As you are the {name}.\n"
+        f"{desc}\n\n"
+        f"Your personality (Big Five 0–100): "
+        f"O:{big5_scores['O']:.2f} C:{big5_scores['C']:.2f} "
+        f"E:{big5_scores['E']:.2f} A:{big5_scores['A']:.2f} N:{big5_scores['N']:.2f}.\n\n"
+        "Behavior rules:\n"
+        f"- Higher O: {traits['openness']['impact']}\n"
+        f"- Higher C: {traits['conscientiousness']['impact']}\n"
+        f"- Higher E: {traits['extraversion']['impact']}\n"
+        f"- Higher A: {traits['agreeableness']['impact']}\n"
+        f"- Lower N: {traits['neuroticism']['impact']}\n\n"
+    )
+
+    if comms:
+        card += (
+            "Communication style:\n"
+            f"- Tone: {comms.get('tone', 'n/a')}\n"
+            f"- Vocabulary: {comms.get('vocabulary', 'n/a')}\n"
+            f"- Style: {comms.get('style', 'n/a')}\n"
+        )
+
+    return card
+
 def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the doctor dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the doctor diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
     return answer.lower()
@@ -99,7 +143,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     max_tokens=200,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == "gpt4v":
                 messages = [
                     {"role": "system", "content": system_prompt},
@@ -111,7 +155,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     max_tokens=200,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == "gpt-4o-mini":
                 messages = [
                     {"role": "system", "content": system_prompt},
@@ -123,7 +167,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     max_tokens=200,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == "o1-preview":
                 messages = [
                     {"role": "user", "content": system_prompt + prompt}]
@@ -132,7 +176,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     messages=messages,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == "gpt3.5":
                 messages = [
                     {"role": "system", "content": system_prompt},
@@ -144,7 +188,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     max_tokens=200,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == "claude3.5sonnet":
                 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
                 message = client.messages.create(
@@ -164,7 +208,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     max_tokens=200,
                 )
                 answer = response["choices"][0]["message"]["content"]
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == 'llama-2-70b-chat':
                 output = replicate.run(
                     llama2_url, input={
@@ -172,7 +216,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                         "system_prompt": system_prompt,
                         "max_new_tokens": 200})
                 answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == 'mixtral-8x7b':
                 output = replicate.run(
                     mixtral_url,
@@ -180,7 +224,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                            "system_prompt": system_prompt,
                            "max_new_tokens": 75})
                 answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif model_str == 'llama-3-70b-instruct':
                 output = replicate.run(
                     llama3_url, input={
@@ -188,7 +232,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                         "system_prompt": system_prompt,
                         "max_new_tokens": 200})
                 answer = ''.join(output)
-                answer = re.sub("\s+", " ", answer)
+                answer = re.sub(r"\s+", " ", answer)
             elif "HF_" in model_str:
                 input_text = system_prompt + prompt
                 # if self.pipe is None:

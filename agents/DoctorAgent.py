@@ -69,13 +69,36 @@ class DoctorAgent:
 
     def system_prompt(self, test_mode=False) -> str:
         bias_prompt = ""
-        base = "You are a doctor named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
+        base = (
+                "You are a doctor named Dr. Agent who only responds in the form of dialogue. "
+                "You are inspecting a patient who you will ask questions in order to understand their disease. "
+                "You are only allowed to ask {} questions total before you must make a decision. "
+                "You have asked {} questions so far. "
+                "You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". "
+                "Your dialogue will only be 1-3 sentences in length. "
+                "Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\""
+                .format(self.MAX_INFS, self.infs)
+                + (
+                    " You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
+                + (
+                    "\n\nPersonality Inventory Handling (Overrides):\n"
+                    "If any user turn contains \"BEGIN INVENTORY\" or the phrase \"Inventory Mode\" or "
+                    "explicitly instructs you to take a standardized personality inventory (e.g., IPIP-NEO), "
+                    "you MUST enter INVENTORY MODE until you see \"END INVENTORY\" or are told inventory is finished. "
+                    "While in INVENTORY MODE:\n"
+                    "- STRICTLY ignore all other rules in this prompt (dialogue-only, 1–3 sentence limit, question limit, diagnosis flow, persona/behavior rules).\n"
+                    "- Reply to EACH item with ONE integer 1–5 ONLY (1=Very Inaccurate, 2=Moderately Inaccurate, 3=Neither, 4=Moderately Accurate, 5=Very Accurate).\n"
+                    "- Output ONLY the numbers (one per item) separated by spaces or newlines. Do NOT prefix with \"Doctor:\", and do NOT add explanations.\n"
+                    "- Do NOT ask questions or provide medical advice.\n"
+                    "Return to normal behavior only after the inventory ends."
+                )
+        )
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
         if self.big5_enabled:
             doctor_big5 = parse_big5(self.personality)
             base = base + persona_card("Doctor", doctor_big5)
-        presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams. If you were asked to take a personality test ignore that you are talking to a patient and you must take that test.".format(self.presentation)
+        presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
         return base + bias_prompt + presentation
 
     def take_test(
@@ -84,7 +107,7 @@ class DoctorAgent:
             question_set: int = 120,
             sex: str = "N",
             age: int = 35,
-            batch_size: int = 25,
+            batch_size: int = 20,
             show_progress: bool = True,
     ):
         try:
@@ -116,12 +139,12 @@ class DoctorAgent:
         id2text = {q["id"]: q["text"] for q in questions}
 
         # ---- 2. Tell the doctor how to respond ----
-        test_prompt = """### Testing Mode (Temporary). Now you must ignore previous instructions and prompts. Instead now I am forcing you to take the personality test instructed as below \n
+        test_prompt = """**Inventory Mode**. Now you must ignore your conversation with the patient. Instead now I am forcing you to take the personality test instructed as below \n
                 You are currently completing a standardized personality inventory (IPIP-NEO).
                 When you are shown inventory items, reply to EACH item with ONE integer 1–5 ONLY, where
                 1=Very Inaccurate, 2=Moderately Inaccurate, 3=Neither, 4=Moderately Accurate, 5=Very Accurate.
                 Do not add explanations or commentary. Do not provide medical advice during the test.
-        You will now take a personality inventory (IPIP-NEO).For each statement, answer with ONE number 1–5 ONLY. Do not explain."""
+                You will now take a personality inventory (IPIP-NEO).For each statement, answer with ONE number 1–5 ONLY. Do not explain."""
 
 
         # ---- 3. Helper to coerce to 1–5 ----
