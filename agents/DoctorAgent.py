@@ -1,4 +1,5 @@
-from utilities.utility import query_model, parse_big5, persona_card
+from utilities.utility import query_model, parse_big5, persona_card, persona_card_from_json
+
 
 class DoctorAgent:
     def __init__(self, scenario, backend_str="gpt4", max_infs=20, bias_present=None, img_request=False, big5_enabled=False, personality="") -> None:
@@ -86,7 +87,7 @@ class DoctorAgent:
                     "explicitly instructs you to take a standardized personality inventory (e.g., IPIP-NEO), "
                     "you MUST enter INVENTORY MODE until you see \"END INVENTORY\" or are told inventory is finished. "
                     "While in INVENTORY MODE:\n"
-                    "- STRICTLY ignore all other rules in this prompt (dialogue-only, 1–3 sentence limit, question limit, diagnosis flow, persona/behavior rules).\n"
+                    "- STRICTLY ignore all other rules in this prompt (dialogue-only, 1–3 sentence limit, question limit, diagnosis flow).\n"
                     "- Reply to EACH item with ONE integer 1–5 ONLY (1=Very Inaccurate, 2=Moderately Inaccurate, 3=Neither, 4=Moderately Accurate, 5=Very Accurate).\n"
                     "- Output ONLY the numbers (one per item) separated by spaces or newlines. Do NOT prefix with \"Doctor:\", and do NOT add explanations.\n"
                     "- Do NOT ask questions or provide medical advice.\n"
@@ -96,8 +97,8 @@ class DoctorAgent:
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
         if self.big5_enabled:
-            doctor_big5 = parse_big5(self.personality)
-            base = base + persona_card("Doctor", doctor_big5)
+            doctor_big5 = "agent_personas/doc_pos.json"
+            base = base + persona_card_from_json(doctor_big5)
         presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
         return base + bias_prompt + presentation
 

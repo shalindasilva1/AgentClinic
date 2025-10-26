@@ -79,7 +79,6 @@ def main(api_key,
     if num_scenarios is None: num_scenarios = scenario_loader.num_scenarios
     if generate_soap_note:
         os.makedirs(soap_note_dir, exist_ok=True)
-
     for _scenario_id in range(0, min(num_scenarios, scenario_loader.num_scenarios)):
         total_presents += 1
         pi_dialogue = str()
@@ -93,6 +92,7 @@ def main(api_key,
                 llm_client=QueryModelChatClient(soap_llm),
                 scenario=scenario,
                 config=SoapAgentConfig(),
+                enable_big5=enable_big5,
             )
             try:
                 exam_info = scenario.exam_information()

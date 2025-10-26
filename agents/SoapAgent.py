@@ -1,13 +1,7 @@
-# agents/soap_agent.py
 import json
 from dataclasses import dataclass
-import os
-from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from utilities.utility import query_model
-
-from .models import NotePayload
+from utilities.utility import query_model, persona_card_from_json
 
 
 @dataclass
@@ -49,11 +43,12 @@ class QueryModelChatClient:
 
 
 class SoapAgent:
-    def __init__(self, llm_client, scenario, config: SoapAgentConfig):
+    def __init__(self, llm_client, scenario, config: SoapAgentConfig, enable_big5=False):
         self.llm = llm_client
         self.scenario = scenario
         self.cfg = config
         self._lines: List[str] = []  # "[turn] Role: content"
+        self.enable_big5 = enable_big5
         self.objective_cache: Optional[Dict[str, Any]] = None
 
     def observe(self, role: str, text: str, turn: int) -> None:
@@ -91,6 +86,9 @@ Important:
 
     def generate(self, turn_range: tuple[int, int]) -> Dict[str, Any]:
         sys = self._system_prompt()
+        if self.enable_big5:
+            doctor_big5 = "agent_personas/doc_pos.json"
+            sys = sys + persona_card_from_json(doctor_big5)
         user = self._user_prompt(turn_range, self.objective_cache)
         raw = self.llm.chat(
             system=sys,
