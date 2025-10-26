@@ -84,7 +84,7 @@ def inference_huggingface(prompt, pipe):
     return response
 
 def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_requested=False, scene=None,
-                max_prompt_len=2 ** 14, clip_prompt=False):
+                max_prompt_len=2 ** 14, clip_prompt=False, max_tokens=200):
     if model_str not in ["gpt4", "gpt3.5", "gpt4o", 'llama-2-70b-chat', "mixtral-8x7b", "gpt-4o-mini",
                          "llama-3-70b-instruct", "gpt4v", "claude3.5sonnet", "o1-preview"] and "_HF" not in model_str:
         raise Exception("No model by the name {}".format(model_str))
@@ -108,28 +108,28 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                         model="gpt-4-vision-preview",
                         messages=messages,
                         temperature=0.05,
-                        max_tokens=200,
+                        max_tokens=max_tokens,
                     )
                 elif model_str == "gpt-4o-mini":
                     response = openai.ChatCompletion.create(
                         model="gpt-4o-mini",
                         messages=messages,
                         temperature=0.05,
-                        max_tokens=200,
+                        max_tokens=max_tokens,
                     )
                 elif model_str == "gpt4":
                     response = openai.ChatCompletion.create(
                         model="gpt-4-turbo",
                         messages=messages,
                         temperature=0.05,
-                        max_tokens=200,
+                        max_tokens=max_tokens,
                     )
                 elif model_str == "gpt4o":
                     response = openai.ChatCompletion.create(
                         model="gpt-4o",
                         messages=messages,
                         temperature=0.05,
-                        max_tokens=200,
+                        max_tokens=max_tokens,
                     )
                 answer = response["choices"][0]["message"]["content"]
             if model_str == "gpt4":
@@ -140,7 +140,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     model="gpt-4-turbo-preview",
                     messages=messages,
                     temperature=0.05,
-                    max_tokens=200,
+                    max_tokens=max_tokens,
                 )
                 answer = response["choices"][0]["message"]["content"]
                 answer = re.sub(r"\s+", " ", answer)
@@ -152,7 +152,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     model="gpt-4-vision-preview",
                     messages=messages,
                     temperature=0.05,
-                    max_tokens=200,
+                    max_tokens=max_tokens,
                 )
                 answer = response["choices"][0]["message"]["content"]
                 answer = re.sub(r"\s+", " ", answer)
@@ -164,7 +164,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     model="gpt-4o-mini",
                     messages=messages,
                     temperature=0.05,
-                    max_tokens=200,
+                    max_tokens=max_tokens,
                 )
                 answer = response["choices"][0]["message"]["content"]
                 answer = re.sub(r"\s+", " ", answer)
@@ -185,7 +185,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     model="gpt-3.5-turbo",
                     messages=messages,
                     temperature=0.05,
-                    max_tokens=200,
+                    max_tokens=max_tokens,
                 )
                 answer = response["choices"][0]["message"]["content"]
                 answer = re.sub(r"\s+", " ", answer)
@@ -205,7 +205,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     model="gpt-4o",
                     messages=messages,
                     temperature=0.05,
-                    max_tokens=200,
+                    max_tokens=max_tokens,
                 )
                 answer = response["choices"][0]["message"]["content"]
                 answer = re.sub(r"\s+", " ", answer)
@@ -214,7 +214,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     llama2_url, input={
                         "prompt": prompt,
                         "system_prompt": system_prompt,
-                        "max_new_tokens": 200})
+                        "max_new_tokens": max_tokens})
                 answer = ''.join(output)
                 answer = re.sub(r"\s+", " ", answer)
             elif model_str == 'mixtral-8x7b':
@@ -222,7 +222,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     mixtral_url,
                     input={"prompt": prompt,
                            "system_prompt": system_prompt,
-                           "max_new_tokens": 75})
+                           "max_new_tokens": max_tokens})
                 answer = ''.join(output)
                 answer = re.sub(r"\s+", " ", answer)
             elif model_str == 'llama-3-70b-instruct':
@@ -230,7 +230,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0, image_
                     llama3_url, input={
                         "prompt": prompt,
                         "system_prompt": system_prompt,
-                        "max_new_tokens": 200})
+                        "max_new_tokens": max_tokens})
                 answer = ''.join(output)
                 answer = re.sub(r"\s+", " ", answer)
             elif "HF_" in model_str:

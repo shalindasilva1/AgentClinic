@@ -1,4 +1,4 @@
-regex==2023.12.25
+regex
 openai==0.28.0
 replicate==0.23.1
 argparse

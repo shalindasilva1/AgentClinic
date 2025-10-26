@@ -8,7 +8,7 @@ import openai
 from agents.DoctorAgent import DoctorAgent
 from agents.MeasurementAgent import MeasurementAgent
 from agents.PatientAgent import PatientAgent
-from agents.soap_agent import QueryModelChatClient, SoapAgent, SoapAgentConfig
+from agents.SoapAgent import QueryModelChatClient, SoapAgent, SoapAgentConfig
 from utilities.utility import load_huggingface_model, compare_results
 from utilities.scenario import *
 
@@ -183,7 +183,7 @@ def main(api_key,
         if soap_agent and soap_turn > 1:
             turn_range = (1, soap_turn - 1)
             soap_note = soap_agent.generate(turn_range)
-            note_path = os.path.join(soap_note_dir, f"scenario_{_scenario_id}_soap.json")
+            note_path = os.path.join(soap_note_dir, f"scenario_{_scenario_id}_soap.txt")
             with open(note_path, "w", encoding="utf-8") as f:
                 json.dump(soap_note, f, indent=2, ensure_ascii=False)
             print(f"SOAP note saved to {note_path}")
