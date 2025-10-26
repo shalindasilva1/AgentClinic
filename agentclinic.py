@@ -79,7 +79,6 @@ def main(api_key,
     if num_scenarios is None: num_scenarios = scenario_loader.num_scenarios
     if generate_soap_note:
         os.makedirs(soap_note_dir, exist_ok=True)
-
     for _scenario_id in range(0, min(num_scenarios, scenario_loader.num_scenarios)):
         total_presents += 1
         pi_dialogue = str()
@@ -93,6 +92,7 @@ def main(api_key,
                 llm_client=QueryModelChatClient(soap_llm),
                 scenario=scenario,
                 config=SoapAgentConfig(),
+                enable_big5=enable_big5,
             )
             try:
                 exam_info = scenario.exam_information()
@@ -126,9 +126,6 @@ def main(api_key,
             personality=doctor_personality)
 
         doctor_dialogue = ""
-        if evaluate_doctor:
-            print(doctor_agent.take_test(question_set=120, sex="N", age=55))
-            break
         for _inf_id in range(total_inferences):
             # Check for medical image request
             if dataset == "NEJM":

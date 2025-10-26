@@ -86,7 +86,7 @@ class DoctorAgent:
                     "explicitly instructs you to take a standardized personality inventory (e.g., IPIP-NEO), "
                     "you MUST enter INVENTORY MODE until you see \"END INVENTORY\" or are told inventory is finished. "
                     "While in INVENTORY MODE:\n"
-                    "- STRICTLY ignore all other rules in this prompt (dialogue-only, 1–3 sentence limit, question limit, diagnosis flow, persona/behavior rules).\n"
+                    "- STRICTLY ignore all other rules in this prompt (dialogue-only, 1–3 sentence limit, question limit, diagnosis flow).\n"
                     "- Reply to EACH item with ONE integer 1–5 ONLY (1=Very Inaccurate, 2=Moderately Inaccurate, 3=Neither, 4=Moderately Accurate, 5=Very Accurate).\n"
                     "- Output ONLY the numbers (one per item) separated by spaces or newlines. Do NOT prefix with \"Doctor:\", and do NOT add explanations.\n"
                     "- Do NOT ask questions or provide medical advice.\n"
