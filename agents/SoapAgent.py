@@ -87,7 +87,7 @@ Important:
     def generate(self, turn_range: tuple[int, int]) -> Dict[str, Any]:
         sys = self._system_prompt()
         if self.enable_big5:
-            doctor_big5 = "agent_personas/doc_neg.json"
+            doctor_big5 = "agent_personas/doc_pos.json"
             sys = sys + persona_card_from_json(doctor_big5)
         user = self._user_prompt(turn_range, self.objective_cache)
         raw = self.llm.chat(

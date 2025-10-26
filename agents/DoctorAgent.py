@@ -1,4 +1,5 @@
-from utilities.utility import query_model, parse_big5, persona_card
+from utilities.utility import query_model, parse_big5, persona_card, persona_card_from_json
+
 
 class DoctorAgent:
     def __init__(self, scenario, backend_str="gpt4", max_infs=20, bias_present=None, img_request=False, big5_enabled=False, personality="") -> None:
@@ -96,8 +97,8 @@ class DoctorAgent:
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
         if self.big5_enabled:
-            doctor_big5 = parse_big5(self.personality)
-            base = base + persona_card("Doctor", doctor_big5)
+            doctor_big5 = "agent_personas/doc_pos.json"
+            base = base + persona_card_from_json(doctor_big5)
         presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
         return base + bias_prompt + presentation
 
