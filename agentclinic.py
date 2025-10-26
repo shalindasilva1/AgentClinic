@@ -126,6 +126,9 @@ def main(api_key,
             personality=doctor_personality)
 
         doctor_dialogue = ""
+        if evaluate_doctor:
+            print(doctor_agent.take_test(question_set=120, sex="N", age=55))
+            break
         for _inf_id in range(total_inferences):
             # Check for medical image request
             if dataset == "NEJM":
