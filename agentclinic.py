@@ -1,11 +1,14 @@
 import argparse
-from bdb import Breakpoint
+import json
+import os
+import time
 
-import openai, time, os
+import openai
 
 from agents.DoctorAgent import DoctorAgent
 from agents.MeasurementAgent import MeasurementAgent
 from agents.PatientAgent import PatientAgent
+from agents.soap_agent import QueryModelChatClient, SoapAgent, SoapAgentConfig
 from utilities.utility import load_huggingface_model, compare_results
 from utilities.scenario import *
 
@@ -24,7 +27,10 @@ def main(api_key,
          total_inferences,
          enable_big5,
          evaluate_doctor = False,
-         anthropic_api_key=None,):
+         anthropic_api_key=None,
+         generate_soap_note=False,
+         soap_llm="gpt4",
+         soap_note_dir="soap_notes"):
 
     # Reading secret keys
     openai.api_key = api_key
@@ -33,6 +39,10 @@ def main(api_key,
     if patient_llm in replicate_llms or doctor_llm in replicate_llms:
         os.environ["REPLICATE_API_TOKEN"] = replicate_api_key
     if doctor_llm in anthropic_llms:
+        os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
+    if generate_soap_note and soap_llm in replicate_llms:
+        os.environ["REPLICATE_API_TOKEN"] = replicate_api_key
+    if generate_soap_note and soap_llm in anthropic_llms:
         os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
 
     # Load MedQA, MIMICIV or NEJM agent case scenarios
@@ -67,6 +77,8 @@ def main(api_key,
     else:
         pipe = None
     if num_scenarios is None: num_scenarios = scenario_loader.num_scenarios
+    if generate_soap_note:
+        os.makedirs(soap_note_dir, exist_ok=True)
 
     for _scenario_id in range(0, min(num_scenarios, scenario_loader.num_scenarios)):
         total_presents += 1
@@ -74,6 +86,23 @@ def main(api_key,
 
         # Initialize scenarios (MedQA/NEJM)
         scenario =  scenario_loader.get_scenario(id=_scenario_id)
+        soap_agent = None
+        soap_turn = 1
+        if generate_soap_note:
+            soap_agent = SoapAgent(
+                llm_client=QueryModelChatClient(soap_llm),
+                scenario=scenario,
+                config=SoapAgentConfig(),
+            )
+            try:
+                exam_info = scenario.exam_information()
+            except Exception:
+                exam_info = None
+            soap_agent.objective_cache = {
+                "patient_information": scenario.patient_information(),
+                "exam_information": exam_info,
+                "examiner_information": getattr(scenario, "examiner_information", lambda: "")(),
+            }
 
         # Initialize agents
         meas_agent = MeasurementAgent(
@@ -118,6 +147,9 @@ def main(api_key,
             else: 
                 doctor_dialogue = doctor_agent.inference_doctor(pi_dialogue, image_requested=imgs)
             print("Doctor [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), doctor_dialogue)
+            if soap_agent:
+                soap_agent.observe("Doctor", doctor_dialogue, soap_turn)
+                soap_turn += 1
 
             # Doctor has arrived at a diagnosis, check correctness
             if "DIAGNOSIS READY" in doctor_dialogue:
@@ -131,6 +163,9 @@ def main(api_key,
                 pi_dialogue = meas_agent.inference_measurement(doctor_dialogue,)
                 print("Measurement [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 patient_agent.add_hist(pi_dialogue)
+                if soap_agent:
+                    soap_agent.observe("Measurement", pi_dialogue, soap_turn)
+                    soap_turn += 1
             # Obtain response from patient
             else:
                 if inf_type == "human_patient":
@@ -139,8 +174,19 @@ def main(api_key,
                     pi_dialogue = patient_agent.inference_patient(doctor_dialogue)
                 print("Patient [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 meas_agent.add_hist(pi_dialogue)
+                if soap_agent:
+                    soap_agent.observe("Patient", pi_dialogue, soap_turn)
+                    soap_turn += 1
             # Prevent API timeouts
             time.sleep(1.0)
+
+        if soap_agent and soap_turn > 1:
+            turn_range = (1, soap_turn - 1)
+            soap_note = soap_agent.generate(turn_range)
+            note_path = os.path.join(soap_note_dir, f"scenario_{_scenario_id}_soap.json")
+            with open(note_path, "w", encoding="utf-8") as f:
+                json.dump(soap_note, f, indent=2, ensure_ascii=False)
+            print(f"SOAP note saved to {note_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Medical Diagnosis Simulation CLI')
@@ -162,6 +208,9 @@ if __name__ == "__main__":
     # BIG-5 args
     parser.add_argument('--enable_big5', type=bool, default=False, required=False, help='Enable Big5 diagnosis')
     parser.add_argument('--evaluate_doctor', type=bool, default=False, required=False, help='Evaluate doctors personality by taking five-factor-e test')
+    parser.add_argument('--generate_soap_note', action='store_true', help='Generate a SOAP note after each scenario')
+    parser.add_argument('--soap_llm', type=str, default='gpt4', help='LLM backend for SOAP note generation')
+    parser.add_argument('--soap_note_dir', type=str, default='soap_notes', help='Directory to store SOAP notes')
     args = parser.parse_args()
 
-    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.enable_big5, args.evaluate_doctor, args.anthropic_api_key)
+    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.enable_big5, args.evaluate_doctor, args.anthropic_api_key, args.generate_soap_note, args.soap_llm, args.soap_note_dir)
