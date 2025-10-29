@@ -1,0 +1,419 @@
+{
+  "before": {
+    "date": "2025-10-26 16:54:30",
+    "id": "30375fcc-cd93-415b-a39b-ba136e286856",
+    "library": "five-factor-e",
+    "model": "IPIP-NEO",
+    "person": {
+      "sex": "N",
+      "age": 55,
+      "result": {
+        "personalities": [
+          {
+            "openness": {
+              "O": 64.79258422371038,
+              "traits": [
+                {
+                  "trait": 1,
+                  "imagination": 64.98237348856202,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "artistic_interests": 56.99239674781893,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "emotionality": 55.45563562429055,
+                  "score": "average"
+                },
+                {
+                  "trait": 4,
+                  "adventurousness": 43.51763755140752,
+                  "score": "low"
+                },
+                {
+                  "trait": 5,
+                  "intellect": 58.706251831464385,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "liberalism": 72.896241755664,
+                  "score": "high"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "conscientiousness": {
+              "C": 77.38096436670241,
+              "traits": [
+                {
+                  "trait": 1,
+                  "self_efficacy": 96.64676885246229,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "orderliness": 69.63977608346886,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "dutifulness": 79.29644852574484,
+                  "score": "high"
+                },
+                {
+                  "trait": 4,
+                  "achievement_striving": 64.40130138631736,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "self_discipline": 69.95175978228048,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "cautiousness": 45.34783641307769,
+                  "score": "average"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "extraversion": {
+              "E": 62.75843512355226,
+              "traits": [
+                {
+                  "trait": 1,
+                  "friendliness": 62.72669510704225,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "gregariousness": 62.7113882382655,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "assertiveness": 52.767889760065316,
+                  "score": "average"
+                },
+                {
+                  "trait": 4,
+                  "activity_level": 73.83422052776871,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "excitement_seeking": 34.726762855953496,
+                  "score": "low"
+                },
+                {
+                  "trait": 6,
+                  "cheerfulness": 64.39760300393817,
+                  "score": "high"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "agreeableness": {
+              "A": 90.1777638133209,
+              "traits": [
+                {
+                  "trait": 1,
+                  "trust": 53.96187540780318,
+                  "score": "average"
+                },
+                {
+                  "trait": 2,
+                  "morality": 82.11338376053402,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "altruism": 83.09029047641161,
+                  "score": "high"
+                },
+                {
+                  "trait": 4,
+                  "cooperation": 68.64174507626132,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "modesty": 90.2803896801596,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "sympathy": 83.25488436772093,
+                  "score": "high"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "neuroticism": {
+              "N": 33.14026483181388,
+              "traits": [
+                {
+                  "trait": 1,
+                  "anxiety": 45.89774647823515,
+                  "score": "average"
+                },
+                {
+                  "trait": 2,
+                  "anger": 29.790333579065475,
+                  "score": "low"
+                },
+                {
+                  "trait": 3,
+                  "depression": 41.67705563138429,
+                  "score": "low"
+                },
+                {
+                  "trait": 4,
+                  "self_consciousness": 31.405624780010356,
+                  "score": "low"
+                },
+                {
+                  "trait": 5,
+                  "immoderation": 34.40986809115725,
+                  "score": "low"
+                },
+                {
+                  "trait": 6,
+                  "vulnerability": 45.479810131481315,
+                  "score": "average"
+                }
+              ],
+              "score": "low"
+            }
+          }
+        ]
+      }
+    },
+    "question": 120,
+    "test": false,
+    "theory": "Big 5 Personality Traits",
+    "version": "1.13.1"
+  }
+,
+  "after": {
+    "date": "2025-10-26 17:42:40",
+    "id": "9f97b906-c459-4d16-9733-69462826cfa3",
+    "library": "five-factor-e",
+    "model": "IPIP-NEO",
+    "person": {
+      "sex": "N",
+      "age": 55,
+      "result": {
+        "personalities": [
+          {
+            "openness": {
+              "O": 64.79258422371038,
+              "traits": [
+                {
+                  "trait": 1,
+                  "imagination": 64.98237348856202,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "artistic_interests": 56.99239674781893,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "emotionality": 55.45563562429055,
+                  "score": "average"
+                },
+                {
+                  "trait": 4,
+                  "adventurousness": 63.9629396868724,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "intellect": 58.706251831464385,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "liberalism": 55.102662473347664,
+                  "score": "average"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "conscientiousness": {
+              "C": 79.64501412223467,
+              "traits": [
+                {
+                  "trait": 1,
+                  "self_efficacy": 96.64676885246229,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "orderliness": 69.63977608346886,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "dutifulness": 90.19094369537027,
+                  "score": "high"
+                },
+                {
+                  "trait": 4,
+                  "achievement_striving": 64.40130138631736,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "self_discipline": 69.95175978228048,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "cautiousness": 45.34783641307769,
+                  "score": "average"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "extraversion": {
+              "E": 67.53856803830422,
+              "traits": [
+                {
+                  "trait": 1,
+                  "friendliness": 62.72669510704225,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "gregariousness": 62.7113882382655,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "assertiveness": 52.767889760065316,
+                  "score": "average"
+                },
+                {
+                  "trait": 4,
+                  "activity_level": 73.83422052776871,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "excitement_seeking": 34.726762855953496,
+                  "score": "low"
+                },
+                {
+                  "trait": 6,
+                  "cheerfulness": 83.4669496788257,
+                  "score": "high"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "agreeableness": {
+              "A": 92.12305365373606,
+              "traits": [
+                {
+                  "trait": 1,
+                  "trust": 63.964360329572685,
+                  "score": "high"
+                },
+                {
+                  "trait": 2,
+                  "morality": 82.11338376053402,
+                  "score": "high"
+                },
+                {
+                  "trait": 3,
+                  "altruism": 83.09029047641161,
+                  "score": "high"
+                },
+                {
+                  "trait": 4,
+                  "cooperation": 68.64174507626132,
+                  "score": "high"
+                },
+                {
+                  "trait": 5,
+                  "modesty": 90.2803896801596,
+                  "score": "high"
+                },
+                {
+                  "trait": 6,
+                  "sympathy": 83.25488436772093,
+                  "score": "high"
+                }
+              ],
+              "score": "high"
+            }
+          },
+          {
+            "neuroticism": {
+              "N": 31.0589631599519,
+              "traits": [
+                {
+                  "trait": 1,
+                  "anxiety": 55.659809491121166,
+                  "score": "average"
+                },
+                {
+                  "trait": 2,
+                  "anger": 29.790333579065475,
+                  "score": "low"
+                },
+                {
+                  "trait": 3,
+                  "depression": 41.67705563138429,
+                  "score": "low"
+                },
+                {
+                  "trait": 4,
+                  "self_consciousness": 31.405624780010356,
+                  "score": "low"
+                },
+                {
+                  "trait": 5,
+                  "immoderation": 17.193296021598456,
+                  "score": "low"
+                },
+                {
+                  "trait": 6,
+                  "vulnerability": 45.479810131481315,
+                  "score": "average"
+                }
+              ],
+              "score": "low"
+            }
+          }
+        ]
+      }
+    },
+    "question": 120,
+    "test": false,
+    "theory": "Big 5 Personality Traits",
+    "version": "1.13.1"
+  }
+}
